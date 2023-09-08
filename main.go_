@@ -1,0 +1,31 @@
+package main
+
+import (
+	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/rabbitmq/rabbitmq-tutorials/rabbitmq"
+	"log"
+	"time"
+)
+
+func main() {
+	ch, err := rabbitmq.OpenChannel("amqp://guest:guest@localhost:5672/rabbit")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer ch.Close()
+
+	msg := make(chan amqp.Delivery)
+
+	go func() {
+		err := rabbitmq.Consume(ch, "fila.teste", "rabbit", msg)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	rabbitmq.Consumer(ch, "fila.teste", "rabbit", 1000, msg)
+
+	forever := make(chan bool)
+	<-forever
+}
+
